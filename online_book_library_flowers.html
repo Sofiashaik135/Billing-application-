@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Online Book Library</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin:0; font-family:Arial,sans-serif; background:#f4f6f8; }
+        header { background:#333; color:white; text-align:center; padding:20px; }
+        .container { max-width:900px; margin:30px auto; padding:20px; }
+        .search { display:flex; gap:10px; margin-bottom:25px; }
+        .search input { flex:1; padding:12px; border:1px solid #ccc; border-radius:5px; }
+        button { padding:10px 15px; border:none; border-radius:5px; cursor:pointer; }
+        .search button { background:#333; color:white; }
+        .books { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:20px; }
+        .book { background:white; padding:20px; border-radius:10px; box-shadow:0 2px 8px #ccc; }
+        .book h3 { margin-top:0; }
+        .book p { color:#666; }
+        .add { background:#2878d4; color:white; }
+        .favorite { background:#eee; }
+        .read { background:#2e8b57; color:white; }
+        .delete { background:#d9534f; color:white; }
+        .my-books { margin-top:40px; }
+        .empty { color:#777; }
+
+        #flowers {
+            position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:9999;
+        }
+        .flower {
+            position:absolute; top:-60px; font-size:28px;
+            animation:beautifulFall var(--duration) ease-in-out forwards;
+            filter:drop-shadow(0 2px 3px rgba(0,0,0,.15));
+        }
+        @keyframes beautifulFall {
+            0% { transform:translateY(-60px) translateX(0) rotate(0deg) scale(.7); opacity:0; }
+            15% { opacity:1; }
+            50% { transform:translateY(50vh) translateX(var(--move)) rotate(180deg) scale(1); }
+            100% { transform:translateY(110vh) translateX(var(--move2)) rotate(450deg) scale(.8); opacity:0; }
+        }
+        @media (max-width:600px) {
+            .container { padding:15px; }
+            .search { flex-direction:column; }
+            .search button { width:100%; }
+            .flower { font-size:22px; }
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>📚 Online Book Library</h1>
+    <p>Find and manage your favorite books</p>
+</header>
+
+<div class="container">
+    <div class="search">
+        <input type="text" id="searchInput" placeholder="Search books..." onkeyup="searchBooks()">
+        <button onclick="searchBooks()">Search</button>
+    </div>
+
+    <h2>Available Books</h2>
+    <div class="books" id="bookList"></div>
+
+    <div class="my-books">
+        <h2>📖 My Books</h2>
+        <div class="books" id="myBooks"></div>
+    </div>
+</div>
+
+<div id="flowers"></div>
+
+<script>
+const books = [
+    { title:"The Alchemist", author:"Paulo Coelho" },
+    { title:"Harry Potter", author:"J.K. Rowling" },
+    { title:"Wings of Fire", author:"A.P.J. Abdul Kalam" },
+    { title:"The Hobbit", author:"J.R.R. Tolkien" }
+];
+
+let myBooks = [];
+
+function displayBooks(list) {
+    const bookList = document.getElementById("bookList");
+    bookList.innerHTML = "";
+
+    if (list.length === 0) {
+        bookList.innerHTML = "<p class='empty'>No books found.</p>";
+        return;
+    }
+
+    list.forEach((book,index) => {
+        const div = document.createElement("div");
+        div.className = "book";
+        div.innerHTML = `
+            <h3>📕 ${book.title}</h3>
+            <p>Author: ${book.author}</p>
+            <button class="add" onclick="addBook(${index})">Add to My Books</button>
+            <button class="favorite" onclick="favoriteBook(this)">♡ Favorite</button>
+        `;
+        bookList.appendChild(div);
+    });
+}
+
+function searchBooks() {
+    const search = document.getElementById("searchInput").value.toLowerCase();
+    const filteredBooks = books.filter(book =>
+        book.title.toLowerCase().includes(search) ||
+        book.author.toLowerCase().includes(search)
+    );
+    displayBooks(filteredBooks);
+}
+
+function addBook(index) {
+    const book = books[index];
+
+    if (myBooks.some(item => item.title === book.title)) {
+        alert("Book is already in My Books!");
+        return;
+    }
+
+    myBooks.push({ title:book.title, author:book.author, read:false });
+    beautifulFlowers();
+    displayMyBooks();
+}
+
+function displayMyBooks() {
+    const myBookList = document.getElementById("myBooks");
+    myBookList.innerHTML = "";
+
+    if (myBooks.length === 0) {
+        myBookList.innerHTML = "<p class='empty'>No books added yet.</p>";
+        return;
+    }
+
+    myBooks.forEach((book,index) => {
+        const div = document.createElement("div");
+        div.className = "book";
+        div.innerHTML = `
+            <h3>📘 ${book.title}</h3>
+            <p>Author: ${book.author}</p>
+            <button class="read" onclick="markRead(${index})">
+                ${book.read ? "✓ Read" : "Mark as Read"}
+            </button>
+            <button class="delete" onclick="deleteBook(${index})">Delete</button>
+        `;
+        myBookList.appendChild(div);
+    });
+}
+
+function markRead(index) {
+    myBooks[index].read = !myBooks[index].read;
+    displayMyBooks();
+}
+
+function deleteBook(index) {
+    myBooks.splice(index,1);
+    displayMyBooks();
+}
+
+function favoriteBook(button) {
+    button.innerText = button.innerText === "♡ Favorite" ? "♥ Favorite" : "♡ Favorite";
+}
+
+function beautifulFlowers() {
+    const container = document.getElementById("flowers");
+    const flowers = ["🌸","🌺","🌷","🌼","💮","🪻","🌻"];
+
+    for (let i=0; i<35; i++) {
+        const flower = document.createElement("span");
+        flower.className = "flower";
+        flower.innerText = flowers[Math.floor(Math.random()*flowers.length)];
+
+        flower.style.left = Math.random()*100 + "%";
+        flower.style.setProperty("--move",(Math.random()*200-100)+"px");
+        flower.style.setProperty("--move2",(Math.random()*300-150)+"px");
+        flower.style.setProperty("--duration",(3+Math.random()*3)+"s");
+        flower.style.fontSize = (18+Math.random()*25)+"px";
+        flower.style.animationDelay = (Math.random()*.8)+"s";
+
+        container.appendChild(flower);
+        setTimeout(() => flower.remove(),7000);
+    }
+}
+
+displayBooks(books);
+displayMyBooks();
+</script>
+</body>
+</html>
